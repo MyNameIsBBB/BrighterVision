@@ -2,67 +2,68 @@
 > **"Empowering Independence. Illuminating the Path."**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Raspberry_Pi_|_ESP32-green.svg)]()
-[![Status](https://img.shields.io/badge/status-Prototype-orange.svg)]()
+[![Platform](https://img.shields.io/badge/Hardware-ESP32%20|%20RPi-green.svg)]()
+[![AI Model](https://img.shields.io/badge/AI-YOLOv5-yellow.svg)]()
+[![Architecture](https://img.shields.io/badge/Architecture-Cloud--Based-blueviolet.svg)]()
 
-## 📖 Overview (ภาพรวมโครงการ)
-**BrighterVision** is an integrated assistive technology system designed to enhance the daily lives of visually impaired individuals. By combining a **Smart Cane** with **AI-powered Smart Glasses**, the system provides real-time environmental feedback, object recognition, and navigation assistance, allowing users to move with greater confidence and safety.
+## 📖 Overview
+**BrighterVision** is a cloud-integrated assistive technology ecosystem designed to enhance the daily lives of visually impaired individuals. By leveraging **Cloud Computing**, we offload heavy AI processing from the wearable devices to a powerful server. This architecture allows the **Smart Glasses** and **Smart Cane** to be lightweight and energy-efficient while utilizing state-of-the-art **YOLOv5** models for object detection via **HTTP** communication.
 
-[Image of blind assistive technology system architecture]
 
-## ✨ Key Features (ฟีเจอร์หลัก)
 
-The system consists of two synchronized devices working together:
+## ✨ Key Features
 
-### 🦯 The Smart Cane (ไม้เท้าอัจฉริยะ)
-* **Obstacle Detection:** Ultrasonic/LiDAR sensors detect obstacles from waist down to ground level (0-2 meters).
-* **Haptic Feedback:** Vibrates the handle with varying intensity based on the distance of the obstacle.
-* **Water/Puddle Detection:** Alerts the user to wet surfaces to prevent slipping.
-* **SOS Panic Button:** Sends GPS location to emergency contacts when pressed.
-* **Night Mode:** Auto-activates LED lights in low-light conditions for visibility to others.
+The system operates on a Client-Server architecture:
 
-### 🕶️ The Smart Glasses (แว่นตา AI)
-* **Object Recognition (YOLO):** Identifies objects (e.g., "Car," "Person," "Chair") and speaks them out via bone-conduction audio.
-* **Text-to-Speech (OCR):** Reads signs, menus, or books instantly when the user looks at them.
-* **Scene Description:** Describes the environment (e.g., "You are at a crosswalk").
-* **Navigation Assistant:** Provides turn-by-turn voice directions.
+### 🦯 The Smart Cane (IoT Client & Controller)
+Acts as the physical interface and hazard detector.
+* **Obstacle & Hazard Detection:** Local ultrasonic/moisture sensors detect immediate physical threats (0-2m) and alert via vibration.
+* **Remote Command Interface:** Sends trigger signals to the glasses/server:
+    * *Button A:* Triggers **Object Detection** request.
+    * *Button B:* Triggers **OCR (Read Text)** request.
+* **GPS Tracking:** Sends coordinates to the Cloud Dashboard via HTTP POST.
+* **SOS Panic Button:** Sends an emergency HTTP request to the server to trigger alerts on the dashboard.
+
+### 🕶️ The Smart Glasses (Vision Client)
+Acts as the image capture and audio feedback unit.
+* **Cloud-Powered Vision:** Captures images and uploads them via **HTTP POST** to the Cloud Server. The server runs **YOLOv5** and returns the detected object names (e.g., "Car, 12 o'clock").
+* **Server-Side OCR:** Uploads images of text to the server for extraction. The server returns the text string to be spoken.
+* **Text-to-Speech (TTS):** Receives text/audio response from the server and plays it via bone-conduction headphones.
+* **Hands-free Telephony:** Users can Answer/End calls via touch sensors.
+
+### 🌐 Guardian Cloud Server & Dashboard (The Brain)
+The centralized processing hub and monitoring platform.
+* **AI Inference Engine:** Hosts **YOLOv5** for object detection and Tesseract for OCR.
+* **Live Location Tracking:** Visualizes GPS data sent from the cane on a real-time map.
+* **Live Stream:** Receives video frames via HTTP/WebRTC for remote monitoring.
+* **REST API:** Handles all incoming requests from devices (Images, GPS, SOS).
 
 ---
 
-## 🛠️ Tech Stack (เทคโนโลยีที่ใช้)
+## 🛠️ Tech Stack
 
-### Hardware ⚙️
-* **Microcontrollers:** Raspberry Pi 5 (Glasses), ESP32 (Cane)
-* **Sensors:** HC-SR04 Ultrasonic, MPU6050 Gyroscope, Moisture Sensor
-* **Camera:** Raspberry Pi Camera Module V2 / ESP32-CAM
-* **Output:** Vibration Motors, Bone Conduction Headphones / Buzzer
+### Hardware (Thin Clients) ⚙️
+* **Smart Glasses:** ESP32 (Image Capture & Audio) + ESP32 Camera Module
+* **Smart Cane:** ESP32 (Sensor Controller & GPS)
+* **Audio:** Bone Conduction Driver + I2S Microphone
 * **Power:** 18650 Li-ion Batteries
 
-### Software & AI 💻
-* **Languages:** Python (AI/Logic), C++ (Microcontroller Firmware)
-* **AI Models:** YOLOv8 (Object Detection), Tesseract (OCR)
-* **Communication:** MQTT / WebSocket (Device Sync), Bluetooth Low Energy (BLE)
-* **Text-to-Speech:** Google TTS / eSpeak
+### Cloud & Backend (The Heavy Lifters) ☁️
+* **Server Framework:** Python (Flask / FastAPI)
+* **AI Computer Vision:** **YOLOv5** (Object Detection), Pytorch
+* **OCR Engine:** Tesseract / EasyOCR
+* **Communication:** **HTTP/HTTPS (REST API)** for all data transfer.
+
+### Frontend (Dashboard) 💻
+* **Framework:** Next.js / React
+* **Maps:** Google Maps API / Leaflet
 
 ---
 
-## 🚀 Installation & Setup (การติดตั้ง)
+## 🚀 Installation & Setup
 
 ### Prerequisites
-1.  Python 3.9+
-2.  Arduino IDE / PlatformIO
-3.  Raspberry Pi OS (Bullseye or later)
-
-### 1. Smart Glasses Setup (Raspberry Pi)
-```bash
-# Clone the repository
-git clone [https://github.com/yourusername/BrighterVision.git](https://github.com/yourusername/BrighterVision.git)
-
-# Navigate to the vision directory
-cd BrighterVision/vision_system
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the AI Engine
-python main_vision.py
+1.  Python 3.9+ (For Server)
+2.  Node.js & npm (For Dashboard)
+3.  ESP32 (For Cane)
+4.  ESP32 + ESP32 Camera module (For Glasses)
