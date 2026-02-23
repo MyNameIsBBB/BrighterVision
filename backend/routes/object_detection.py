@@ -1,29 +1,27 @@
+import os
 from fastapi import APIRouter, Request, UploadFile, File
 from ultralytics import YOLO
-import easyocr
 import cv2
 import numpy as np
+import torch
+
+# ปิดข้อความแจ้งเตือนต่างๆ เพื่อให้ Console สะอาดขึ้น
+os.environ["YOLO_VERBOSE"] = "False"
 
 router = APIRouter()
+
+device = "mps" if torch.backends.mps.is_available() else "cpu"
+print(f"🖥️ Object Detection using device: {device.upper()}")
 
 class ObjectDetection:
     def __init__(self):
         self.model = YOLO("yolo26n.pt") 
 
     def detect(self, image):
-        results = self.model(image, conf=0.5) 
-        return results
-
-class TextReader:
-    def __init__(self):
-        self.reader = easyocr.Reader(['th', 'en'], gpu=False) 
-
-    def read_text(self, image):
-        results = self.reader.readtext(image, detail=0)
+        results = self.model(image, conf=0.5, device=device, verbose=False) 
         return results
 
 detector = ObjectDetection()
-ocr_reader = TextReader()
 
 @router.post("/object-detection")
 async def object_detection_endpoint(request: Request):
@@ -54,20 +52,3 @@ async def object_detection_endpoint(request: Request):
                 top_object = name
                 
     return {"most_confident_object": top_object}
-
-@router.post("/ocr")
-async def ocr_endpoint(request: Request):
-    contents = await request.body()
-    
-    nparr = np.frombuffer(contents, np.uint8)
-    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
-    detected_texts = ocr_reader.read_text(image)
-    
-    full_sentence = " ".join(detected_texts)
-    
-    return {
-        "text_found": len(detected_texts) > 0,
-        "raw_texts": detected_texts,
-        "full_sentence": full_sentence
-    }
