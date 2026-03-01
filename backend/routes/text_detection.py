@@ -33,7 +33,7 @@ async def ocr_endpoint(request: Request):
     full_sentence = " ".join(detected_texts)
     
     text_to_speak = full_sentence if full_sentence else "ไม่พบข้อความ"
-    audio_path = "tmp/example.wav"
+    audio_path = "tmp/audio/audio_ocr.wav"
     subprocess.run([
         "say", 
         "--file-format=WAVE", 
