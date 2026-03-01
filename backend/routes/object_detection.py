@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, Request, UploadFile, File
+import subprocess
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -51,4 +52,21 @@ async def object_detection_endpoint(request: Request):
                 highest_conf = conf
                 top_object = name
                 
-    return {"most_confident_object": top_object}
+    if top_object:
+        text_to_speak = f"ตรวจพบ {top_object}"
+    else:
+        text_to_speak = "ไม่พบวัตถุ"
+        
+    audio_path = "tmp/audio/audio_object.wav"
+    subprocess.run([
+        "say", 
+        "--file-format=WAVE", 
+        "--data-format=LEI16@16000", 
+        "-o", audio_path, 
+        text_to_speak
+    ])
+    
+    return {
+        "most_confident_object": top_object,
+        "audio_url": "/test-audio"
+    }

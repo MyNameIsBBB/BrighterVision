@@ -1,7 +1,8 @@
-
+import os
 import socket
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes.object_detection import router as object_detection_router
@@ -42,6 +43,17 @@ app.include_router(text_detection_router, prefix="/api")
 def health_check():
     """เช็คสถานะการทำงานของ Server"""
     return {"status": "ok", "message": "API is running smoothly"}
+AUDIO_FILE = "tmp/example.wav"
+
+@app.get("/test-audio", tags=["Audio"])
+def get_audio():
+    if os.path.exists(AUDIO_FILE):
+        return FileResponse(
+            AUDIO_FILE,
+            media_type="audio/wav",
+            filename="audio.wav"
+        )
+    return {"error": "file not found"}
 
 @app.post("/health", tags=["System"])
 def health_check(request: Request):
