@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, Request
+from fastapi.responses import FileResponse
 import subprocess
 import easyocr
 import cv2
@@ -42,9 +43,4 @@ async def ocr_endpoint(request: Request):
         text_to_speak
     ])
     
-    return {
-        "text_found": len(detected_texts) > 0,
-        "raw_texts": detected_texts,
-        "full_sentence": full_sentence,
-        "audio_url": "/test-audio"
-    }
+    return FileResponse(audio_path, media_type="audio/wav")

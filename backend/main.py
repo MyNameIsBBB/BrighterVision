@@ -1,6 +1,8 @@
 import os
 import socket
 import uvicorn
+import datetime
+
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,8 +38,14 @@ app.add_middleware(
 )
 
 # ลงทะเบียน Routes (ใส่ prefix "/api" เผื่ออนาคตมีหลายเวอร์ชัน)
-app.include_router(object_detection_router, prefix="/api")
-app.include_router(text_detection_router, prefix="/api")
+# app.include_router(object_detection_router)
+app.include_router(text_detection_router)
+
+@app.get('/gps', tags=["GPS"])
+def gps(lat: float, lng: float):
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] GPS Lat:{lat} Lng:{lng}")
+    return {"status": "ok", "message": "GPS Received"}
+
 
 @app.get("/health", tags=["System"])
 def health_check():

@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, Request, UploadFile, File
+from fastapi.responses import FileResponse
 import subprocess
 from ultralytics import YOLO
 import cv2
@@ -24,7 +25,7 @@ class ObjectDetection:
 
 detector = ObjectDetection()
 
-@router.post("/object-detection")
+@router.post("/button")
 async def object_detection_endpoint(request: Request):
     contents = await request.body()
     
@@ -66,7 +67,4 @@ async def object_detection_endpoint(request: Request):
         text_to_speak
     ])
     
-    return {
-        "most_confident_object": top_object,
-        "audio_url": "/test-audio"
-    }
+    return FileResponse(audio_path, media_type="audio/wav")
