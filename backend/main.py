@@ -1,7 +1,7 @@
 import os
 import socket
 import uvicorn
-import datetime
+from datetime import datetime
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
@@ -9,8 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from routes.object_detection import router as object_detection_router
 from routes.text_detection import router as text_detection_router
+from routes.dashboard import router as dashboard_router
 
-PORT = 3000
+PORT = 8000
 
 def get_local_ip() -> str:
     """ดึงค่า IP Address ภายในเครือข่าย (Local Network) เพื่อใช้ทดสอบผ่านแว่นตาหรือมือถือ"""
@@ -31,15 +32,16 @@ app = FastAPI(
 # ตั้งค่า CORS 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*", "http://localhost:3000"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ลงทะเบียน Routes (ใส่ prefix "/api" เผื่ออนาคตมีหลายเวอร์ชัน)
-# app.include_router(object_detection_router)
-app.include_router(text_detection_router)
+app.include_router(object_detection_router)
+# app.include_router(text_detection_router)
+app.include_router(dashboard_router)
 
 @app.get('/gps', tags=["GPS"])
 def gps(lat: float, lng: float):

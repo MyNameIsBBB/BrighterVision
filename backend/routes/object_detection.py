@@ -1,7 +1,8 @@
 import os
-from fastapi import APIRouter, Request, UploadFile, File
+from fastapi import APIRouter, Request, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 import subprocess
+import requests
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -25,9 +26,20 @@ class ObjectDetection:
 
 detector = ObjectDetection()
 
-@router.post("/button")
-async def object_detection_endpoint(request: Request):
-    contents = await request.body()
+@router.post("/play")
+async def object_detection_endpoint(image_url: str = "http://192.168.215.71/capture"):
+    print('we got url : ' , image_url)
+    
+    try:
+        # กำหนด timeout 5 วินาที ป้องกันเซิร์ฟเวอร์ค้าง
+        response = requests.get(image_url, timeout=5)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching image from ESP32: {e}")
+        raise HTTPException(status_code=504, detail="ไม่สามารถเชื่อมต่อกับ ESP32 Camera ได้ กรุณาตรวจสอบ IP Address และการเชื่อมต่อ WiFi")
+
+    print(f"we got response : {len(response.content)} bytes")
+    contents = response.content
     
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -53,11 +65,17 @@ async def object_detection_endpoint(request: Request):
                 highest_conf = conf
                 top_object = name
                 
+    # Save the annotated image
+    annotated_image = results[0].plot()
+    os.makedirs("tmp", exist_ok=True)
+    cv2.imwrite("tmp/last_capture.jpg", annotated_image)
+                
     if top_object:
-        text_to_speak = f"ตรวจพบ {top_object}"
+        text_to_speak = f"Detected {top_object}"
     else:
-        text_to_speak = "ไม่พบวัตถุ"
+        text_to_speak = "No object detected"
         
+    print('we got object ' , top_object)
     audio_path = "tmp/audio/audio_object.wav"
     subprocess.run([
         "say", 
@@ -68,3 +86,10 @@ async def object_detection_endpoint(request: Request):
     ])
     
     return FileResponse(audio_path, media_type="audio/wav")
+
+@router.get("/latest-image")
+async def get_latest_image():
+    image_path = "tmp/last_capture.jpg"
+    if os.path.exists(image_path):
+        return FileResponse(image_path, media_type="image/jpeg", headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"})
+    return {"error": "No image available yet"}
