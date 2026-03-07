@@ -46,6 +46,7 @@ async def object_detection_endpoint(image_url: str = "http://192.168.215.71/capt
     
     nparr = np.frombuffer(contents, np.uint8)
     image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    image = cv2.rotate(image, cv2.ROTATE_180)
     
     results = detector.detect(image)
     
